@@ -143,7 +143,7 @@ def classify_intent_local(query: str, extracted_texts: list, combined_context: s
         return "TASK: summarize"
     if "sentiment" in q:
         return "TASK: sentiment"
-    if any(word in q for word in ["explain code", "explain this code", "what does this code do", "bug"]):
+    if "bug" in q or ("explain" in q and "code" in q) or "what does this code do" in q:
         return "TASK: explain_code"
     if "compare" in q or "same topic" in q:
         return "TASK: compare"
