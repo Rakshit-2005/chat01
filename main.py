@@ -20,7 +20,8 @@ async def root():
 @app.post("/agent")
 async def agent_endpoint(
     query: Optional[str] = Form(default=""),
-    files: Optional[List[UploadFile]] = File(default=None)
+    files: Optional[List[UploadFile]] = File(default=None),
+    history: Optional[str] = Form(default="[]")
 ):
     file_data = []
     if files:
@@ -33,7 +34,7 @@ async def agent_endpoint(
             })
 
     try:
-        result = await run_agent(query=query, files=file_data)
+        result = await run_agent(query=query, files=file_data, history=history)
         return result
     except Exception as e:
         # Ensure we always return JSON to the frontend (avoid HTML 500 pages)

@@ -10,9 +10,11 @@ def extract_from_pdf(file_bytes: bytes) -> str:
             txt = page.get_text()
             full_text += txt
 
-        # If text is too short, it's likely a scanned PDF — use HF image OCR
+        # If text is too short, it's likely a scanned PDF — use image OCR
         if len(full_text.strip()) < 100:
             full_text = ocr_scanned_pdf(doc)
+        else:
+            full_text = "[OCR Confidence: 100% (Digital Extract)]\n\n" + full_text
 
         return full_text.strip()
     except Exception as e:
@@ -40,10 +42,33 @@ def extract_from_image(file_bytes: bytes, filename: str) -> str:
 
 
 def _ocr_image_bytes(image_bytes: bytes, content_type: str) -> str:
-    prompt = "Read the text from this image. Return only the extracted text, no extra commentary."
-    resp = groq_vision("meta-llama/llama-4-scout-17b-16e-instruct", image_bytes, prompt, content_type=content_type)
+    prompt = """
+Read the text from this image. Estimate your OCR confidence level as a percentage (e.g. 95%) based on clarity.
+Format your response exactly like this:
+CONFIDENCE: <percentage>
+TEXT:
+<extracted text>
+"""
+    resp = groq_vision("llama-3.2-11b-vision-preview", image_bytes, prompt, content_type=content_type)
     if resp == "GROQ_TOKEN_MISSING":
         return "Image OCR unavailable: GROQ_API_KEY is not set."
     if resp.startswith("GROQ_VISION_ERROR") or resp.startswith("GROQ_ERROR"):
         return "Image OCR unavailable right now on this deployment."
-    return resp
+    
+    confidence = "90%"
+    text_content = resp
+    if "CONFIDENCE:" in resp and "TEXT:" in resp:
+        try:
+            parts = resp.split("TEXT:", 1)
+            conf_part = parts[0]
+            text_part = parts[1]
+            
+            import re
+            conf_match = re.search(r'CONFIDENCE:\s*([\d%]+)', conf_part)
+            if conf_match:
+                confidence = conf_match.group(1)
+            text_content = text_part.strip()
+        except Exception:
+            pass
+            
+    return f"[OCR Confidence: {confidence}]\n\n{text_content}"

@@ -4,8 +4,9 @@ from tools.youtube import fetch_youtube_transcript
 from tools.summarizer import summarize_text
 from tools.sentiment import analyze_sentiment
 from tools.code_explainer import explain_code
-from tools.hf_infer import hf_text
+from tools.hf_infer import hf_text, hf_chat_completions
 import re
+import json
 
 SYSTEM_PROMPT = """
 You are a smart AI agent that receives extracted content from files and a user query.
@@ -18,7 +19,12 @@ Your job:
 Only output the TASK or CLARIFY line. Nothing else.
 """
 
-async def run_agent(query: str, files: list) -> dict:
+async def run_agent(query: str, files: list, history: str = "[]") -> dict:
+    try:
+        chat_history = json.loads(history)
+    except Exception:
+        chat_history = []
+        
     steps = []
     extracted_texts = []
 
@@ -80,7 +86,7 @@ async def run_agent(query: str, files: list) -> dict:
     steps.append(f"🎯 Task identified: {task}")
 
     # Step 7: Execute the task
-    output = await execute_task(task, combined_context, query, steps)
+    output = await execute_task(task, combined_context, query, steps, chat_history)
 
     return {
         "status": "success",
@@ -91,7 +97,7 @@ async def run_agent(query: str, files: list) -> dict:
     }
 
 
-async def execute_task(task: str, context: str, query: str, steps: list) -> str:
+async def execute_task(task: str, context: str, query: str, steps: list, chat_history: list) -> str:
     steps.append(f"⚙️ Executing: {task}")
 
     if task == "summarize":
@@ -107,7 +113,7 @@ async def execute_task(task: str, context: str, query: str, steps: list) -> str:
         return compare_inputs(context)
 
     else:  # general answer
-        return answer_question(query, context)
+        return answer_question(query, context, chat_history)
 
 
 def compare_inputs(context: str) -> str:
@@ -128,6 +134,9 @@ Context:
 def classify_intent_local(query: str, extracted_texts: list, combined_context: str) -> str:
     q = query.lower().strip()
     if not q:
+        if extracted_texts:
+            # Auto-default to summarizing uploaded files if no specific query is provided
+            return "TASK: summarize"
         return "CLARIFY: What do you want me to do with the uploaded content?"
 
     if any(word in q for word in ["summarize", "summary"]):
@@ -146,20 +155,26 @@ def classify_intent_local(query: str, extracted_texts: list, combined_context: s
 
     return "TASK: answer"
 
-def answer_question(query: str, context: str) -> str:
-    prompt = f"""
-Answer the user's question using the provided context when relevant.
+def answer_question(query: str, context: str, chat_history: list) -> str:
+    system_content = f"""Answer the user's question using the provided context when relevant.
 
 If the context is insufficient, answer based on general knowledge.
 Reply in plain text and keep it concise.
 
-Question:
-{query}
-
 Context:
-{context[:6000]}
-"""
-    resp = hf_text("llama-3.1-8b-instant", prompt, max_length=256)
+{context[:6000]}"""
+
+    messages = [{"role": "system", "content": system_content}]
+    
+    # Prepend history turns (limit to last 10 messages to keep context window clean)
+    for msg in chat_history[-10:]:
+        role = "user" if msg.get("role") == "user" else "assistant"
+        messages.append({"role": role, "content": msg.get("content", "")})
+        
+    # Append current query
+    messages.append({"role": "user", "content": query})
+    
+    resp = hf_chat_completions("llama-3.1-8b-instant", messages, max_length=256)
     if resp == "GROQ_TOKEN_MISSING":
         return "Answer unavailable: GROQ_API_KEY not set."
     if resp.startswith("GROQ_"):

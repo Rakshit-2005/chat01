@@ -4,208 +4,360 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Multi-Modal AI Agent</title>
+  <!-- Import Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #111827 100%);
+      --panel-bg: rgba(17, 24, 39, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --accent: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f0f0f;
-      color: #e0e0e0;
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
       display: flex;
       flex-direction: column;
       height: 100vh;
+      overflow: hidden;
     }
 
     header {
-      background: #1a1a1a;
-      padding: 14px 24px;
-      border-bottom: 1px solid #2a2a2a;
+      backdrop-filter: blur(16px);
+      background: rgba(17, 24, 39, 0.6);
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    header .logo-area {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    header h1 { font-size: 1.1rem; font-weight: 600; color: #fff; }
-    header span { font-size: 0.75rem; color: #888; }
+    header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
+    header span { font-size: 0.8rem; color: var(--text-muted); }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
 
     #chat-window {
       flex: 1;
       overflow-y: auto;
-      padding: 24px;
+      padding: 28px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px;
+      scroll-behavior: smooth;
     }
 
+    /* Scrollbar styling */
+    #chat-window::-webkit-scrollbar { width: 6px; }
+    #chat-window::-webkit-scrollbar-track { background: transparent; }
+    #chat-window::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+    #chat-window::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
     .message {
-      max-width: 80%;
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 0.9rem;
+      max-width: 75%;
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 0.95rem;
       line-height: 1.6;
       white-space: pre-wrap;
+      animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .message.user {
-      background: #2563eb;
+      background: var(--accent-gradient);
       color: #fff;
       align-self: flex-end;
       border-bottom-right-radius: 4px;
     }
 
     .message.agent {
-      background: #1e1e1e;
-      border: 1px solid #2a2a2a;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
       align-self: flex-start;
       border-bottom-left-radius: 4px;
     }
 
     .message.agent .label {
-      font-size: 0.7rem;
-      color: #888;
-      margin-bottom: 6px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .steps-block {
-      background: #111;
-      border: 1px solid #2a2a2a;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-top: 10px;
-      font-size: 0.78rem;
-      color: #aaa;
+    .task-badge {
+      font-size: 0.65rem;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--primary);
     }
 
-    .steps-block summary {
+    /* Steps and Extracted content lists */
+    .steps-block, .extracted-block {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .steps-block summary, .extracted-block summary {
       cursor: pointer;
-      color: #888;
-      font-size: 0.75rem;
-      margin-bottom: 4px;
+      color: var(--text-main);
+      font-weight: 500;
+      font-size: 0.8rem;
+      outline: none;
+      user-select: none;
     }
 
-    .steps-block div { margin-top: 6px; line-height: 1.8; }
+    .steps-block div, .extracted-block div { margin-top: 10px; line-height: 1.8; }
 
-    .extracted-block {
-      background: #111;
-      border: 1px solid #2a2a2a;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-top: 8px;
-      font-size: 0.78rem;
-      color: #aaa;
-    }
-
-    .extracted-block summary {
-      cursor: pointer;
-      color: #888;
+    .confidence-badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: bold;
+      border: 1px solid rgba(16, 185, 129, 0.3);
       font-size: 0.75rem;
+      display: inline-block;
+      margin-bottom: 6px;
     }
 
     .clarify-box {
-      background: #1c1c1c;
-      border: 1px solid #f59e0b;
-      border-radius: 10px;
-      padding: 12px 16px;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 16px;
+      padding: 14px 18px;
       color: #fcd34d;
+      font-size: 0.95rem;
+      align-self: flex-start;
+      max-width: 75%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: fadeInUp 0.3s ease forwards;
+    }
+
+    /* Loading state */
+    .thinking-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      align-self: flex-start;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      padding: 12px 16px;
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      color: var(--text-muted);
       font-size: 0.88rem;
-      align-self: flex-start;
-      max-width: 80%;
     }
 
-    .thinking {
-      align-self: flex-start;
-      color: #666;
-      font-size: 0.82rem;
-      animation: pulse 1.2s infinite;
+    .loader-dots {
+      display: flex;
+      gap: 4px;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+    .loader-dots span {
+      width: 6px;
+      height: 6px;
+      background-color: var(--text-muted);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .loader-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loader-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1.0); }
     }
 
     #input-area {
-      background: #1a1a1a;
-      border-top: 1px solid #2a2a2a;
-      padding: 16px 24px;
+      backdrop-filter: blur(16px);
+      background: rgba(17, 24, 39, 0.6);
+      border-top: 1px solid var(--border-color);
+      padding: 20px 28px;
     }
 
     #file-preview {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .file-chip {
-      background: #2a2a2a;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
       border-radius: 20px;
-      padding: 4px 10px;
-      font-size: 0.75rem;
-      color: #ccc;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      color: var(--text-main);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      animation: fadeInUp 0.2s ease forwards;
     }
 
     .file-chip button {
       background: none;
       border: none;
-      color: #888;
+      color: var(--text-muted);
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 1.1rem;
       padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
     }
+
+    .file-chip button:hover { color: var(--danger); }
 
     #input-row {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: flex-end;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-wrapper:focus-within {
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
 
     #query-input {
       flex: 1;
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 10px;
-      padding: 10px 14px;
-      color: #e0e0e0;
-      font-size: 0.9rem;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 0.95rem;
       resize: none;
-      min-height: 44px;
+      min-height: 28px;
       max-height: 120px;
       outline: none;
+      font-family: inherit;
+      padding: 4px 0;
     }
-
-    #query-input:focus { border-color: #2563eb; }
 
     #file-btn {
-      background: #2a2a2a;
-      border: 1px solid #333;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
       border-radius: 10px;
-      padding: 10px 14px;
-      color: #ccc;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 1.1rem;
+      transition: background 0.2s ease, transform 0.1s ease;
     }
 
-    #file-btn:hover { background: #333; }
+    #file-btn:hover { background: rgba(255, 255, 255, 0.1); transform: scale(1.03); }
+    #file-btn:active { transform: scale(0.97); }
 
     #send-btn {
-      background: #2563eb;
+      background: var(--accent-gradient);
       border: none;
-      border-radius: 10px;
-      padding: 10px 18px;
+      border-radius: 12px;
+      height: 38px;
+      padding: 0 20px;
       color: #fff;
       font-size: 0.9rem;
-      cursor: pointer;
       font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      transition: transform 0.1s ease, opacity 0.2s ease;
     }
 
-    #send-btn:hover { background: #1d4ed8; }
-    #send-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+    #send-btn:hover { transform: scale(1.03); }
+    #send-btn:active { transform: scale(0.97); }
+    #send-btn:disabled {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
 
     #file-input { display: none; }
   </style>
@@ -213,33 +365,44 @@
 <body>
 
 <header>
-  <div>
+  <div class="logo-area">
     <h1>🤖 Multi-Modal AI Agent</h1>
+    <span>·</span>
     <span>Supports Text · Images · PDFs · Audio</span>
+  </div>
+  <div class="status-badge">
+    <div class="status-dot"></div>
+    Online & Stateful
   </div>
 </header>
 
 <div id="chat-window">
   <div class="message agent">
     <div class="label">Agent</div>
-    👋 Hello! Ask me anything or upload a file if needed.
+    👋 Hello! I am now equipped with conversational memory. You can ask follow-up questions, upload documents (PDFs, Images), or attach audio recordings. What can I do for you today?
   </div>
 </div>
 
 <div id="input-area">
   <div id="file-preview"></div>
   <div id="input-row">
-    <button id="file-btn" onclick="document.getElementById('file-input').click()">📎</button>
+    <button id="file-btn" onclick="document.getElementById('file-input').click()" title="Attach file">📎</button>
     <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.mp3,.wav,.m4a" onchange="handleFiles(event)" />
-    <textarea id="query-input" placeholder="Ask a question here..." rows="1"
-      onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendMessage()}"
-      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+    
+    <div class="input-wrapper">
+      <textarea id="query-input" placeholder="Type a message or ask a follow-up..." rows="1"
+        onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendMessage()}"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+    </div>
+    
     <button id="send-btn" onclick="sendMessage()">Send</button>
   </div>
 </div>
 
 <script>
   let selectedFiles = [];
+  // global array to store frontend-managed chat memory
+  let chatHistory = [];
 
   function handleFiles(event) {
     const newFiles = Array.from(event.target.files);
@@ -277,9 +440,16 @@
   function appendThinking() {
     const chat = document.getElementById("chat-window");
     const div = document.createElement("div");
-    div.className = "thinking";
+    div.className = "thinking-box";
     div.id = "thinking-indicator";
-    div.innerText = "⏳ Agent is thinking...";
+    div.innerHTML = `
+      <span>⏳ Analyzing context</span>
+      <div class="loader-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    `;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
   }
@@ -295,7 +465,7 @@
 
     if (!query && selectedFiles.length === 0) return;
 
-    // Show user message
+    // Show user message in chat window
     let userMsg = query || "";
     if (selectedFiles.length > 0) {
       userMsg += (userMsg ? "\n" : "") + selectedFiles.map(f => `📎 ${f.name}`).join("  ");
@@ -312,6 +482,9 @@
     // Build form data
     const formData = new FormData();
     formData.append("query", query);
+    // Include chat history
+    formData.append("history", JSON.stringify(chatHistory));
+    
     selectedFiles.forEach(file => formData.append("files", file));
     selectedFiles = [];
     renderFilePreviews();
@@ -328,6 +501,10 @@
       removeThinking();
 
       if (data.status === "clarify") {
+        // Save turn in memory
+        chatHistory.push({ role: "user", content: query || "[Uploaded files]" });
+        chatHistory.push({ role: "assistant", content: `CLARIFY: ${data.question}` });
+
         const div = document.createElement("div");
         div.className = "clarify-box";
         div.innerHTML = `❓ <strong>Need clarification:</strong><br>${data.question}`;
@@ -335,6 +512,10 @@
         document.getElementById("chat-window").scrollTop = 99999;
 
       } else {
+        // Save turn in memory
+        chatHistory.push({ role: "user", content: query || "[Uploaded files]" });
+        chatHistory.push({ role: "assistant", content: data.output });
+
         // Steps trace
         let stepsHtml = "";
         if (data.steps && data.steps.length > 0) {
@@ -345,12 +526,23 @@
             </details>`;
         }
 
-        // Extracted text
+        // Extracted text & confidence display
         let extractedHtml = "";
         if (data.extracted_texts && data.extracted_texts.length > 0) {
-          const items = data.extracted_texts.map(e =>
-            `<strong>${e.source}:</strong><br>${e.text}...`
-          ).join("<br><br>");
+          const items = data.extracted_texts.map(e => {
+            let confBadge = "";
+            let cleanText = e.text;
+            
+            // Extract confidence score if present in the text format
+            const match = e.text.match(/^\[OCR Confidence:\s*([^\]]+)\]/);
+            if (match) {
+              confBadge = `<div class="confidence-badge">🎯 Confidence: ${match[1]}</div><br>`;
+              cleanText = e.text.replace(/^\[OCR Confidence:\s*[^\]]+\]\s*/, "");
+            }
+            
+            return `<strong>${e.source}:</strong><br>${confBadge}${cleanText.slice(0, 500)}...`;
+          }).join("<br><br>");
+          
           extractedHtml = `
             <details class="extracted-block">
               <summary>📄 Extracted Text Preview</summary>
@@ -359,7 +551,7 @@
         }
 
         appendMessage("agent",
-          `<div class="label">Agent · ${data.task}</div>` +
+          `<div class="label">Agent <span class="task-badge">${data.task}</span></div>` +
           `<div>${data.output.replace(/\n/g, "<br>")}</div>` +
           stepsHtml + extractedHtml
         );
