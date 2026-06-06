@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+bitcoin
+python-multipart
+pymupdf
+youtube-transcript-api
+python-dotenv
+httpx
+
