@@ -49,7 +49,7 @@ CONFIDENCE: <percentage>
 TEXT:
 <extracted text>
 """
-    resp = groq_vision("llama-3.2-11b-vision-preview", image_bytes, prompt, content_type=content_type)
+    resp = groq_vision("meta-llama/llama-4-scout-17b-16e-instruct", image_bytes, prompt, content_type=content_type)
     if resp == "GROQ_TOKEN_MISSING":
         return "Image OCR unavailable: GROQ_API_KEY is not set."
     if resp.startswith("GROQ_VISION_ERROR") or resp.startswith("GROQ_ERROR"):
