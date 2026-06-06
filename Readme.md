@@ -37,7 +37,7 @@ Do not deploy `.venv`, `.env`, or cache folders. The included `.dockerignore` ke
 ```mermaid
 graph TD
     %% User Inputs
-    subgraph User Interface (Browser)
+    subgraph "User Interface (Browser)"
         UI[index.html - Premium Chat UI]
         Files[Uploaded Files: PDF, Image, Audio]
         Text[User text queries]
@@ -45,13 +45,13 @@ graph TD
     end
 
     %% Backend Entrypoint
-    subgraph FastAPI Backend
+    subgraph "FastAPI Backend"
         API[main.py - /agent endpoint]
         Core[agent.py - Orchestrator]
     end
 
     %% Tool Registry and Pipelines
-    subgraph Tool Registry & Pipelines
+    subgraph "Tool Registry & Pipelines"
         PDF[ocr.py - PyMuPDF Parser]
         OCR[ocr.py - Groq Llama 4 Vision OCR]
         Audio[audio.py - Groq Whisper STT]
