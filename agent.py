@@ -93,7 +93,7 @@ async def run_agent(query: str, files: list, history: str = "[]") -> dict:
         "task": task,
         "output": output,
         "steps": steps,
-        "extracted_texts": [{"source": i["source"], "text": i["text"][:500]} for i in extracted_texts]
+        "extracted_texts": [{"source": i["source"], "text": i["text"]} for i in extracted_texts]
     }
 
 
