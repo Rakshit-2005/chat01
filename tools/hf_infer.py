@@ -162,3 +162,26 @@ def hf_chat_completions(model: str, messages: list, max_length: int = 512) -> st
             return str(data)
     except Exception as e:
         return f"GROQ_REQUEST_ERROR: {str(e)}"
+
+
+def groq_audio(audio_bytes: bytes, filename: str, content_type: str) -> str:
+    if not _has_token():
+        return "GROQ_TOKEN_MISSING"
+    url = "https://api.groq.com/openai/v1/audio/transcriptions"
+    
+    files = {
+        "file": (filename, audio_bytes, content_type)
+    }
+    data = {
+        "model": "whisper-large-v3",
+        "response_format": "json"
+    }
+    
+    try:
+        with httpx.Client(timeout=120.0) as client:
+            r = client.post(url, headers=_headers(), files=files, data=data)
+            r.raise_for_status()
+            res = r.json()
+            return res.get("text", "")
+    except Exception as e:
+        return f"GROQ_AUDIO_ERROR: {str(e)}"

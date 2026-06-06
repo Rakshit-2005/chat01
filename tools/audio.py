@@ -1,8 +1,8 @@
 import os
-from tools.hf_infer import hf_audio
+from tools.hf_infer import groq_audio
 
 def transcribe_audio(file_bytes: bytes, filename: str) -> str:
-    """Transcribe audio using Hugging Face Whisper-style inference."""
+    """Transcribe audio using Groq's Whisper API."""
     ext = filename.split(".")[-1].lower()
     content_type = "audio/wav"
     if ext == "mp3":
@@ -12,7 +12,7 @@ def transcribe_audio(file_bytes: bytes, filename: str) -> str:
     elif ext == "wav":
         content_type = "audio/wav"
 
-    transcript = hf_audio("openai/whisper-small", file_bytes, content_type=content_type)
-    if transcript == "HF_TOKEN_MISSING":
-        return "Audio transcription skipped: HUGGINGFACE_API_TOKEN not set in environment."
+    transcript = groq_audio(file_bytes, filename, content_type)
+    if transcript == "GROQ_TOKEN_MISSING":
+        return "Audio transcription skipped: GROQ_API_KEY not set in environment."
     return transcript
