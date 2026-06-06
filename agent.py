@@ -174,6 +174,9 @@ Context:
     # Append current query
     messages.append({"role": "user", "content": query})
     
+    # Debug logging
+    print("DEBUG - messages sent to Groq:", json.dumps(messages, indent=2))
+    
     resp = hf_chat_completions("llama-3.1-8b-instant", messages, max_length=256)
     if resp == "GROQ_TOKEN_MISSING":
         return "Answer unavailable: GROQ_API_KEY not set."
